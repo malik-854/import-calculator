@@ -3,13 +3,10 @@
   "version": "1.0.0",
   "description": "Pakistan Import Calculator with Cloud Sync",
   "scripts": {
-    "dev": "echo 'Static site - no build required'",
-    "start": "echo 'Static site - no build required'"
+    "dev": "echo 'Static site - no build required'"
   },
-  "dependencies": {
-    "mongodb": "^6.3.0"
-  },
+  "dependencies": {},
   "engines": {
-    "node": "24.x"
+    "node": "20.x"
   }
 }
