@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultimate Import Calculator - 2026</title>
+    <style>
+        :root { --primary: #0f172a; --accent: #2563eb; --bg: #f1f5f9; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg); 
+            padding: 10px; 
+            font-size: 14px; 
+            color: #334155; 
+            margin: 0;
+            -webkit-text-size-adjust: 100%;
+        }
+        .container { 
+            max-width: 1100px; 
+            margin: auto; 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 15px; 
+        }
+        .card { 
+            background: white; 
+            padding: 0;
+            border-radius: 10px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            overflow: hidden;
+        }
+        .card-content {
+            padding: 15px;
+        }
+        h2 { 
+            margin: 0;
+            font-size: 0.95rem; 
+            color: var(--accent); 
+            text-transform: uppercase; 
+        }
+        .input-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+        @media (min-width: 768px) {
+            .container { grid-template-columns: 1fr 1fr; }
+            .input-grid { grid-template-columns: 1fr 1fr; }
+        }
+        label { 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 3px; 
+            color: #475569; 
+            font-size: 13px;
+        }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .results-table { 
+            width: 100%; 
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .results-table td { 
+            padding: 10px 0; 
+            border-bottom: 1px solid #f1f5f9; 
+        }
+        .results-table td:last-child { 
+            text-align: right; 
+            font-weight: bold; 
+        }
+        .total-row { 
+            font-size: 1.1rem; 
+            color: #be123c; 
+            border-top: 2px solid #334155 !important; 
+        }
+        .final-cost-banner {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border: none;
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .final-cost-banner:hover {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+        }
+        .copy-icon {
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px;
+            border-radius: 4px;
+            min-width: 30px;
+            text-align: center;
+        }
+        .cost-value {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .hidden { display: none; }
+        .hs-manager { 
+            background: #f8fafc; 
+            padding: 12px; 
+            border-radius: 6px; 
+            margin-top: 15px; 
+            border: 1px solid #e2e8f0; 
+        }
+        .hs-manager input { 
+            margin-right: 0;
+            margin-bottom: 8px; 
+            width: 100%;
+        }
+        @media (min-width: 480px) {
+            .hs-manager input { 
+                width: auto;
+                margin-right: 10px;
+            }
+        }
+        .btn-small { 
+            background: var(--accent); 
+            color: white; 
+            padding: 8px 12px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 12px; 
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .save-section { 
+            display: flex; 
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px; 
+            padding-top: 15px; 
+            border-top: 1px solid #e2e8f0; 
+        }
+        @media (min-width: 768px) {
+            .save-section { 
+                flex-direction: row; 
+                justify-content: space-between; 
+                align-items: center; 
+            }
+        }
+        .save-notice { 
+            background: #dbeafe; 
+            padding: 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            color: #1e40af; 
+            margin-top: 10px; 
+            display: none; 
+        }
+        .toggle-section {
+            background: #f1f5f9;
+            padding: 12px 15px;
+            border-radius: 0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s;
+        }
+        .toggle-section:hover {
+            background: #e2e8f0;
+        }
+        .toggle-icon {
+            font-weight: bold;
+            font-size: 16px;
+            color: #475569;
+            transition: transform 0.3s ease;
+        }
+        .toggle-section.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .section-content {
+            transition: all 0.3s ease;
+            max-height: 2000px;
+            overflow: hidden;
+        }
+        .collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border: none;
+        }
+        .header-bar {
+            background: var(--primary);
+            color: white;
+            padding: 20px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .header-title {
+            margin: 0;
+            font-size: 1.2rem;
+            line-height: 1.3;
+        }
+        .mobile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .mobile-actions button {
+            flex: 1;
+            min-width: 120px;
+        }
+        /* Improve touch targets */
+        button, input[type="button"], input[type="submit"] {
+            min-height: 44px;
+            touch-action: manipulation;
+        }
+        select {
+            min-height: 44px;
+        }
+        /* Scroll improvements */
+        .scrollable-section {
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-right: 5px;
+        }
+        .scrollable-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollable-section::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .scrollable-section::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .copy-notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #059669;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="final-cost-banner" onclick="copyFinalCost()" id="finalCostBanner">
+    <div class="copy-icon">📋</div>
+    <div class="cost-value" id="finalCostValue">Rs. 0.00 /kg</div>
+</div>
+
+<div class="copy-notification" id="copyNotification">
+    Copied to clipboard! ✓
+</div>
+
+<div class="container">
+    <div class="header-bar">
+        <h1 class="header-title">Pakistan Multi-Incoterm Import Calculator</h1>
+        <div class="mobile-actions">
+            <button class="btn-small" onclick="window.print()">🖨️ Print</button>
+            <button class="btn-small" onclick="resetToDefaults()" style="background: #dc2626;">🔄 Reset</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="toggle-section active" onclick="toggleSection('commercial-section', this)">
+            <h2>1. Commercial & Valuation</h2>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="section-content card-content" id="commercial-section">
+            <div class="input-grid">
+                <div style="grid-column: 1 / -1;">
+                    <label>HS Code Preset</label>
+                    <select id="hs_code" onchange="loadHsCodeSettings()">
+                        <!-- Options will be loaded from localStorage -->
+                    </select>
+                </div>
+                <div>
+                    <label>Origin of Product</label>
+                    <select id="origin">
+                        <option value="china">China</option>
+                        <option value="indonesia">Indonesia</option>
+                        <option value="malaysia">Malaysia</option>
+                        <option value="usa">USA</option>
+                        <option value="europe">Europe</option>
+                        <option value="uae">UAE</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Rate Type</label>
+                    <select id="incoterm" onchange="handleIncotermChange()">
+                        <option value="cnf">C&F (Cost & Freight)</option>
+                        <option value="cif" selected>CIF (Cost, Ins, Freight)</option>
+                        <option value="fob">FOB (Free on Board)</option>
+                    </select>
+                </div>
+                <div><label>Unit Price (USD/Ton)</label><input type="number" id="unit_price" value="750" oninput="calculate()"></div>
+                
+                <div id="box_freight" class="hidden"><label>Sea Freight (USD Total)</label><input type="number" id="freight_usd" value="1200" oninput="calculate()"></div>
+                <div id="box_insurance" class="hidden"><label>Insurance (USD)</label><input type="number" id="insurance_usd" value="200" oninput="calculate()"></div>
+                
+                <div><label>ITP Value (USD/KG)</label><input type="number" id="itp_val" value="0.75" step="0.01" oninput="calculate()"></div>
+                <div><label>Ex. Rate (PKR)</label><input type="number" id="ex_rate" value="282" oninput="calculate()"></div>
+                <div><label>Quantity (Tons)</label><input type="number" id="qty" value="20" oninput="calculate()"></div>
+            </div>
+
+            <div class="hs-manager">
+                <h3 style="margin-top:0; font-size: 0.9rem; color: #475569;">Add/Manage HS Codes</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                    <input type="text" id="new_hs_code" placeholder="HS Code" style="flex: 1; min-width: 120px;">
+                    <input type="text" id="new_hs_description" placeholder="Description" style="flex: 2; min-width: 150px;">
+                    <button class="btn-small" onclick="addHsCode()">➕ Add</button>
+                    <button class="btn-small" onclick="deleteCurrentHsCode()" style="background: #dc2626;">🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="toggle-section active" onclick="toggleSection('tax-section', this)">
+            <h2>2. Fully Editable Tax Rates (%)</h2>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="section-content card-content scrollable-section" id="tax-section">
+            <div class="input-grid">
+                <div><label>CD (%)</label><input type="number" id="rate_cd" value="15" oninput="calculate()"></div>
+                <div><label>ACD (%)</label><input type="number" id="rate_acd" value="2" oninput="calculate()"></div>
+                <div><label>RD (%)</label><input type="number" id="rate_rd" value="10" oninput="calculate()"></div>
+                <div><label>Anti-Dump (%)</label><input type="number" id="rate_add" value="0" oninput="calculate()"></div>
+                <div><label>GST (%)</label><input type="number" id="rate_st" value="18" oninput="calculate()"></div>
+                <div><label>AST (%)</label><input type="number" id="rate_ast" value="3" oninput="calculate()"></div>
+                <div><label>Income Tax (%)</label><input type="number" id="rate_it" value="12" oninput="calculate()"></div>
+                <div><label>Sindh Cess (%)</label><input type="number" id="rate_cess" value="1.85" step="0.01" oninput="calculate()"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="toggle-section" onclick="toggleSection('summary-section', this)">
+            <h2>3. Landing Summary & Local Charges</h2>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="section-content card-content" id="summary-section">
+            <table class="results-table">
+                <tr><td>Invoice Value (USD)</td><td id="out_inv_usd">0</td></tr>
+                <tr><td>Total Shipping Cost (PKR)</td><td id="out_ship_pkr">0</td></tr>
+                <tr><td>Assessed Value (FBR Base)</td><td id="out_assessed">0</td></tr>
+                <tr><td>Customs Duty (CD)</td><td id="out_cd">0</td></tr>
+                <tr><td>Add. Customs Duty (ACD)</td><td id="out_acd">0</td></tr>
+                <tr><td>Regulatory Duty (RD)</td><td id="out_rd">0</td></tr>
+                <tr><td>Anti-Dumping (ADD)</td><td id="out_add">0</td></tr>
+                <tr><td>Sales Tax (GST + AST)</td><td id="out_st">0</td></tr>
+                <tr><td>Income Tax (WHT)</td><td id="out_it">0</td></tr>
+                <tr><td>Port/Cess/Local</td><td id="out_local">0</td></tr>
+                <tr class="total-row"><td>Landed Cost / KG</td><td id="out_kg">Rs. 0.00</td></tr>
+            </table>
+            
+            <div style="margin-top:20px;">
+                <label>Port/Clearing PKR (Fixed)</label>
+                <input type="number" id="port_pkr" value="85000" oninput="calculate()">
+                <label style="margin-top: 10px; display: block;">Trucking to Warehouse (PKR/KG)</label>
+                <input type="number" id="truck_pkr" value="12" oninput="calculate()">
+            </div>
+            
+            <button class="btn-small" onclick="window.print()" style="width: 100%; margin-top: 15px;">🖨️ Print Full Calculation</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="toggle-section" onclick="toggleSection('save-section', this)">
+            <h2>💾 Save Settings</h2>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="section-content card-content" id="save-section">
+            <div class="save-section">
+                <div style="width: 100%;">
+                    <label style="display: block; margin-bottom: 8px;">Save ALL Settings to Current HS Code</label>
+                    <button class="btn-small" onclick="saveAllSettingsToHsCode()" style="width: 100%; padding: 12px;">💾 Update & Save All Settings</button>
+                </div>
+                <div id="save-notice" class="save-notice">Settings saved successfully!</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Default values for when no HS Code settings exist
+    const DEFAULT_VALUES = {
+        origin: 'china',
+        incoterm: 'cif',
+        unit_price: 750,
+        freight_usd: 1200,
+        insurance_usd: 200,
+        itp_val: 0.75,
+        ex_rate: 282,
+        qty: 20,
+        port_pkr: 85000,
+        truck_pkr: 12,
+        rate_cd: 15,
+        rate_acd: 2,
+        rate_rd: 10,
+        rate_add: 0,
+        rate_st: 18,
+        rate_ast: 3,
+        rate_it: 12,
+        rate_cess: 1.85
+    };
+
+    // Mobile toggle functionality - FIXED VERSION
+    function toggleSection(sectionId, toggleElement) {
+        const section = document.getElementById(sectionId);
+        const icon = toggleElement.querySelector('.toggle-icon');
+        
+        if (section.classList.contains('collapsed')) {
+            section.classList.remove('collapsed');
+            toggleElement.classList.add('active');
+            icon.textContent = '▼';
+        } else {
+            section.classList.add('collapsed');
+            toggleElement.classList.remove('active');
+            icon.textContent = '▶';
+        }
+    }
+
+    // Initialize all sections on load
+    function initializeSections() {
+        // Make sure save-section is collapsed by default
+        const saveSection = document.getElementById('save-section');
+        const saveToggle = document.querySelector('[onclick*="save-section"]');
+        if (saveSection && saveToggle) {
+            saveSection.classList.add('collapsed');
+            saveToggle.classList.remove('active');
+            saveToggle.querySelector('.toggle-icon').textContent = '▶';
+        }
+        
+        // Make sure summary-section is collapsed by default
+        const summarySection = document.getElementById('summary-section');
+        const summaryToggle = document.querySelector('[onclick*="summary-section"]');
+        if (summarySection && summaryToggle) {
+            summarySection.classList.add('collapsed');
+            summaryToggle.classList.remove('active');
+            summaryToggle.querySelector('.toggle-icon').textContent = '▶';
+        }
+    }
+
+    // Copy final cost to clipboard
+    function copyFinalCost() {
+        const costText = document.getElementById('finalCostValue').textContent;
+        const finalCost = costText.replace(' /kg', '');
+        
+        navigator.clipboard.writeText(finalCost).then(() => {
+            const notification = document.getElementById('copyNotification');
+            notification.style.display = 'block';
+            notification.style.background = '#059669';
+            notification.textContent = 'Copied to clipboard! ✓';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }).catch(err => {
+            const notification = document.getElementById('copyNotification');
+            notification.style.display = 'block';
+            notification.style.background = '#dc2626';
+            notification.textContent = 'Failed to copy!';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        });
+    }
+
+    // Initialize localStorage with default HS codes if empty
+    function initializeHsCodes() {
+        if (!localStorage.getItem('hsCodes')) {
+            const defaultHsCodes = [
+                { code: '4802.6990', description: 'Printing Paper' },
+                { code: '4810.1990', description: 'Art Paper' },
+                { code: '4810.9200', description: 'FBB / Duplex' },
+                { code: '3919.9090', description: 'PVC Sticker' }
+            ];
+            localStorage.setItem('hsCodes', JSON.stringify(defaultHsCodes));
+        }
+        
+        if (!localStorage.getItem('hsCodeSettings')) {
+            localStorage.setItem('hsCodeSettings', JSON.stringify({}));
+        }
+    }
+
+    // Load HS codes into dropdown
+    function loadHsCodes() {
+        const hsCodes = JSON.parse(localStorage.getItem('hsCodes')) || [];
+        const select = document.getElementById('hs_code');
+        select.innerHTML = '';
+        
+        hsCodes.forEach(hs => {
+            const option = document.createElement('option');
+            option.value = hs.code;
+            option.textContent = `${hs.code} - ${hs.description}`;
+            select.appendChild(option);
+        });
+        
+        // Load the last used HS code or first one
+        const lastHsCode = localStorage.getItem('lastHsCode');
+        if (lastHsCode && hsCodes.some(hs => hs.code === lastHsCode)) {
+            select.value = lastHsCode;
+        } else if (hsCodes.length > 0) {
+            select.value = hsCodes[0].code;
+        }
+        
+        // Load settings for selected HS code
+        loadHsCodeSettings();
+    }
+
+    // Add new HS code
+    function addHsCode() {
+        const codeInput = document.getElementById('new_hs_code');
+        const descInput = document.getElementById('new_hs_description');
+        
+        const code = codeInput.value.trim();
+        const description = descInput.value.trim();
+        
+        if (!code || !description) {
+            alert('Please enter both HS Code and Description');
+            return;
+        }
+        
+        const hsCodes = JSON.parse(localStorage.getItem('hsCodes')) || [];
+        
+        // Check if code already exists
+        if (hsCodes.some(hs => hs.code === code)) {
+            alert('HS Code already exists!');
+            return;
+        }
+        
+        hsCodes.push({ code, description });
+        localStorage.setItem('hsCodes', JSON.stringify(hsCodes));
+        
+        // Clear inputs
+        codeInput.value = '';
+        descInput.value = '';
+        
+        // Reload dropdown
+        loadHsCodes();
+        
+        // Select the new HS code
+        document.getElementById('hs_code').value = code;
+        
+        // Auto-save to show it worked
+        setTimeout(() => {
+            const notice = document.getElementById('save-notice');
+            notice.style.display = 'block';
+            notice.textContent = `HS Code ${code} added!`;
+            notice.style.background = '#d1fae5';
+            notice.style.color = '#065f46';
+            setTimeout(() => {
+                notice.style.display = 'none';
+            }, 3000);
+        }, 100);
+    }
+
+    // Delete current HS code
+    function deleteCurrentHsCode() {
+        const select = document.getElementById('hs_code');
+        const currentCode = select.value;
+        
+        if (!currentCode) return;
+        
+        if (!confirm(`Delete HS Code ${currentCode}? This cannot be undone.`)) return;
+        
+        let hsCodes = JSON.parse(localStorage.getItem('hsCodes')) || [];
+        hsCodes = hsCodes.filter(hs => hs.code !== currentCode);
+        localStorage.setItem('hsCodes', JSON.stringify(hsCodes));
+        
+        // Also remove saved settings for this HS code
+        const settings = JSON.parse(localStorage.getItem('hsCodeSettings')) || {};
+        delete settings[currentCode];
+        localStorage.setItem('hsCodeSettings', JSON.stringify(settings));
+        
+        loadHsCodes();
+        
+        // Show confirmation
+        const notice = document.getElementById('save-notice');
+        notice.style.display = 'block';
+        notice.textContent = `HS Code ${currentCode} deleted!`;
+        notice.style.background = '#fee2e2';
+        notice.style.color = '#991b1b';
+        setTimeout(() => {
+            notice.style.display = 'none';
+        }, 3000);
+    }
+
+    // Load settings for selected HS code - FIXED VERSION
+    function loadHsCodeSettings() {
+        const hsCode = document.getElementById('hs_code').value;
+        if (!hsCode) return;
+        
+        // Save last used HS code
+        localStorage.setItem('lastHsCode', hsCode);
+        
+        const settings = JSON.parse(localStorage.getItem('hsCodeSettings')) || {};
+        const hsSettings = settings[hsCode] || {};
+        
+        // Clear all fields first with DEFAULT_VALUES
+        document.getElementById('origin').value = DEFAULT_VALUES.origin;
+        document.getElementById('incoterm').value = DEFAULT_VALUES.incoterm;
+        document.getElementById('unit_price').value = DEFAULT_VALUES.unit_price;
+        document.getElementById('freight_usd').value = DEFAULT_VALUES.freight_usd;
+        document.getElementById('insurance_usd').value = DEFAULT_VALUES.insurance_usd;
+        document.getElementById('itp_val').value = DEFAULT_VALUES.itp_val;
+        document.getElementById('ex_rate').value = DEFAULT_VALUES.ex_rate;
+        document.getElementById('qty').value = DEFAULT_VALUES.qty;
+        document.getElementById('port_pkr').value = DEFAULT_VALUES.port_pkr;
+        document.getElementById('truck_pkr').value = DEFAULT_VALUES.truck_pkr;
+        document.getElementById('rate_cd').value = DEFAULT_VALUES.rate_cd;
+        document.getElementById('rate_acd').value = DEFAULT_VALUES.rate_acd;
+        document.getElementById('rate_rd').value = DEFAULT_VALUES.rate_rd;
+        document.getElementById('rate_add').value = DEFAULT_VALUES.rate_add;
+        document.getElementById('rate_st').value = DEFAULT_VALUES.rate_st;
+        document.getElementById('rate_ast').value = DEFAULT_VALUES.rate_ast;
+        document.getElementById('rate_it').value = DEFAULT_VALUES.rate_it;
+        document.getElementById('rate_cess').value = DEFAULT_VALUES.rate_cess;
+        
+        // Now apply ONLY the saved settings for this specific HS code
+        // Using strict undefined checks to ensure we only apply saved values
+        if (hsSettings.origin !== undefined) document.getElementById('origin').value = hsSettings.origin;
+        if (hsSettings.incoterm !== undefined) document.getElementById('incoterm').value = hsSettings.incoterm;
+        if (hsSettings.unit_price !== undefined) document.getElementById('unit_price').value = hsSettings.unit_price;
+        if (hsSettings.freight_usd !== undefined) document.getElementById('freight_usd').value = hsSettings.freight_usd;
+        if (hsSettings.insurance_usd !== undefined) document.getElementById('insurance_usd').value = hsSettings.insurance_usd;
+        if (hsSettings.itp_val !== undefined) document.getElementById('itp_val').value = hsSettings.itp_val;
+        if (hsSettings.ex_rate !== undefined) document.getElementById('ex_rate').value = hsSettings.ex_rate;
+        if (hsSettings.qty !== undefined) document.getElementById('qty').value = hsSettings.qty;
+        if (hsSettings.port_pkr !== undefined) document.getElementById('port_pkr').value = hsSettings.port_pkr;
+        if (hsSettings.truck_pkr !== undefined) document.getElementById('truck_pkr').value = hsSettings.truck_pkr;
+        if (hsSettings.rate_cd !== undefined) document.getElementById('rate_cd').value = hsSettings.rate_cd;
+        if (hsSettings.rate_acd !== undefined) document.getElementById('rate_acd').value = hsSettings.rate_acd;
+        if (hsSettings.rate_rd !== undefined) document.getElementById('rate_rd').value = hsSettings.rate_rd;
+        if (hsSettings.rate_add !== undefined) document.getElementById('rate_add').value = hsSettings.rate_add;
+        if (hsSettings.rate_st !== undefined) document.getElementById('rate_st').value = hsSettings.rate_st;
+        if (hsSettings.rate_ast !== undefined) document.getElementById('rate_ast').value = hsSettings.rate_ast;
+        if (hsSettings.rate_it !== undefined) document.getElementById('rate_it').value = hsSettings.rate_it;
+        if (hsSettings.rate_cess !== undefined) document.getElementById('rate_cess').value = hsSettings.rate_cess;
+        
+        // Trigger incoterm change to show/hide correct fields
+        handleIncotermChange();
+        calculate();
+    }
+
+    // Save ALL settings to current HS code (both Section 1 and Section 2)
+    function saveAllSettingsToHsCode() {
+        const hsCode = document.getElementById('hs_code').value;
+        if (!hsCode) {
+            alert('Please select an HS Code first');
+            return;
+        }
+        
+        const settings = JSON.parse(localStorage.getItem('hsCodeSettings')) || {};
+        
+        // Save ONLY the current values - don't merge with any existing settings
+        settings[hsCode] = {
+            // Section 1: Commercial & Valuation
+            origin: document.getElementById('origin').value,
+            incoterm: document.getElementById('incoterm').value,
+            unit_price: parseFloat(document.getElementById('unit_price').value) || DEFAULT_VALUES.unit_price,
+            freight_usd: parseFloat(document.getElementById('freight_usd').value) || DEFAULT_VALUES.freight_usd,
+            insurance_usd: parseFloat(document.getElementById('insurance_usd').value) || DEFAULT_VALUES.insurance_usd,
+            itp_val: parseFloat(document.getElementById('itp_val').value) || DEFAULT_VALUES.itp_val,
+            ex_rate: parseFloat(document.getElementById('ex_rate').value) || DEFAULT_VALUES.ex_rate,
+            qty: parseFloat(document.getElementById('qty').value) || DEFAULT_VALUES.qty,
+            port_pkr: parseFloat(document.getElementById('port_pkr').value) || DEFAULT_VALUES.port_pkr,
+            truck_pkr: parseFloat(document.getElementById('truck_pkr').value) || DEFAULT_VALUES.truck_pkr,
+            
+            // Section 2: Tax Rates
+            rate_cd: parseFloat(document.getElementById('rate_cd').value) || DEFAULT_VALUES.rate_cd,
+            rate_acd: parseFloat(document.getElementById('rate_acd').value) || DEFAULT_VALUES.rate_acd,
+            rate_rd: parseFloat(document.getElementById('rate_rd').value) || DEFAULT_VALUES.rate_rd,
+            rate_add: parseFloat(document.getElementById('rate_add').value) || DEFAULT_VALUES.rate_add,
+            rate_st: parseFloat(document.getElementById('rate_st').value) || DEFAULT_VALUES.rate_st,
+            rate_ast: parseFloat(document.getElementById('rate_ast').value) || DEFAULT_VALUES.rate_ast,
+            rate_it: parseFloat(document.getElementById('rate_it').value) || DEFAULT_VALUES.rate_it,
+            rate_cess: parseFloat(document.getElementById('rate_cess').value) || DEFAULT_VALUES.rate_cess
+        };
+        
+        localStorage.setItem('hsCodeSettings', JSON.stringify(settings));
+        
+        // Show save confirmation
+        const notice = document.getElementById('save-notice');
+        notice.style.display = 'block';
+        notice.textContent = `✅ All settings saved for HS Code: ${hsCode}`;
+        notice.style.background = '#d1fae5';
+        notice.style.color = '#065f46';
+        setTimeout(() => {
+            notice.style.display = 'none';
+        }, 3000);
+    }
+
+    function resetToDefaults() {
+        if (!confirm('Reset all fields to default values?')) return;
+        
+        document.getElementById('origin').value = DEFAULT_VALUES.origin;
+        document.getElementById('incoterm').value = DEFAULT_VALUES.incoterm;
+        document.getElementById('unit_price').value = DEFAULT_VALUES.unit_price;
+        document.getElementById('freight_usd').value = DEFAULT_VALUES.freight_usd;
+        document.getElementById('insurance_usd').value = DEFAULT_VALUES.insurance_usd;
+        document.getElementById('itp_val').value = DEFAULT_VALUES.itp_val;
+        document.getElementById('ex_rate').value = DEFAULT_VALUES.ex_rate;
+        document.getElementById('qty').value = DEFAULT_VALUES.qty;
+        document.getElementById('port_pkr').value = DEFAULT_VALUES.port_pkr;
+        document.getElementById('truck_pkr').value = DEFAULT_VALUES.truck_pkr;
+        document.getElementById('rate_cd').value = DEFAULT_VALUES.rate_cd;
+        document.getElementById('rate_acd').value = DEFAULT_VALUES.rate_acd;
+        document.getElementById('rate_rd').value = DEFAULT_VALUES.rate_rd;
+        document.getElementById('rate_add').value = DEFAULT_VALUES.rate_add;
+        document.getElementById('rate_st').value = DEFAULT_VALUES.rate_st;
+        document.getElementById('rate_ast').value = DEFAULT_VALUES.rate_ast;
+        document.getElementById('rate_it').value = DEFAULT_VALUES.rate_it;
+        document.getElementById('rate_cess').value = DEFAULT_VALUES.rate_cess;
+        
+        handleIncotermChange();
+        calculate();
+        
+        // Show confirmation
+        const notice = document.getElementById('save-notice');
+        notice.style.display = 'block';
+        notice.textContent = '🔄 All fields reset to defaults!';
+        notice.style.background = '#fef3c7';
+        notice.style.color = '#92400e';
+        setTimeout(() => {
+            notice.style.display = 'none';
+        }, 3000);
+    }
+
+    function handleIncotermChange() {
+        const term = document.getElementById('incoterm').value;
+        
+        // Show freight field only for FOB (buyer pays freight)
+        document.getElementById('box_freight').className = (term === 'fob') ? '' : 'hidden';
+        
+        // Show insurance field for FOB and C&F (buyer pays insurance)
+        document.getElementById('box_insurance').className = (term === 'fob' || term === 'cnf') ? '' : 'hidden';
+        
+        calculate();
+    }
+
+    function calculate() {
+        const term = document.getElementById('incoterm').value;
+        const origin = document.getElementById('origin').value;
+        const unitPrice = parseFloat(document.getElementById('unit_price').value) || 0;
+        const qty = parseFloat(document.getElementById('qty').value) || 0;
+        const exRate = parseFloat(document.getElementById('ex_rate').value) || 0;
+        const itpVal = (parseFloat(document.getElementById('itp_val').value) || 0);
+
+        let invUsd = unitPrice * qty;
+        let freightUsd = (term === 'fob') ? parseFloat(document.getElementById('freight_usd').value) || 0 : 0;
+        let insuranceUsd = (term === 'fob' || term === 'cnf') ? parseFloat(document.getElementById('insurance_usd').value) || 0 : 0;
+        
+        // For CIF, insurance is calculated as 1% of assessment
+        if (term === 'cif') {
+            let cnfAssessmentUsd = Math.max(unitPrice, itpVal) * qty;
+            insuranceUsd = cnfAssessmentUsd * 0.01; // Mandatory 1%
+        }
+
+        // Cost logic for Assessment vs Actual Payment
+        let actualCostPkr = (invUsd + freightUsd + insuranceUsd) * exRate;
+        
+        // For C&F and CIF, freight is included in unit price, so we need to estimate it for assessment
+        // This is a simplification - in real scenario, C&F price already includes freight
+        let freightForAssessment = 0;
+        if (term === 'cnf' || term === 'cif') {
+            // Estimate freight as 0 since it's already included in C&F/CIF price
+            freightForAssessment = 0;
+        } else if (term === 'fob') {
+            freightForAssessment = freightUsd;
+        }
+        
+        let cnfAssessmentUsd = Math.max(unitPrice, itpVal) * qty + freightForAssessment + insuranceUsd;
+        let assessedValuePkr = cnfAssessmentUsd * exRate;
+
+        // Taxes
+        const cd = assessedValuePkr * (parseFloat(document.getElementById('rate_cd').value)/100);
+        const acd = assessedValuePkr * (parseFloat(document.getElementById('rate_acd').value)/100);
+        const rd = assessedValuePkr * (parseFloat(document.getElementById('rate_rd').value)/100);
+        const add = assessedValuePkr * (parseFloat(document.getElementById('rate_add').value)/100);
+        
+        const stBase = assessedValuePkr + cd + acd + rd + add;
+        const gst = stBase * (parseFloat(document.getElementById('rate_st').value)/100);
+        const ast = stBase * (parseFloat(document.getElementById('rate_ast').value)/100);
+        const it = (stBase + gst + ast) * (parseFloat(document.getElementById('rate_it').value)/100);
+
+        const cess = assessedValuePkr * (parseFloat(document.getElementById('rate_cess').value)/100);
+        const port = parseFloat(document.getElementById('port_pkr').value) || 0;
+        const truck = (qty * 1000) * (parseFloat(document.getElementById('truck_pkr').value) || 0);
+
+        const grandTotal = actualCostPkr + cd + acd + rd + add + gst + ast + it + cess + port + truck;
+        const perKg = grandTotal / (qty * 1000);
+
+        document.getElementById('out_inv_usd').innerText = "$" + invUsd.toLocaleString();
+        document.getElementById('out_ship_pkr').innerText = Math.round((freightUsd + insuranceUsd) * exRate).toLocaleString();
+        document.getElementById('out_assessed').innerText = Math.round(assessedValuePkr).toLocaleString();
+        document.getElementById('out_cd').innerText = Math.round(cd).toLocaleString();
+        document.getElementById('out_acd').innerText = Math.round(acd).toLocaleString();
+        document.getElementById('out_rd').innerText = Math.round(rd).toLocaleString();
+        document.getElementById('out_add').innerText = Math.round(add).toLocaleString();
+        document.getElementById('out_st').innerText = Math.round(gst + ast).toLocaleString();
+        document.getElementById('out_it').innerText = Math.round(it).toLocaleString();
+        document.getElementById('out_local').innerText = Math.round(cess + port).toLocaleString();
+        document.getElementById('out_kg').innerText = "Rs. " + perKg.toFixed(2);
+        
+        // Update the final cost banner
+        document.getElementById('finalCostValue').textContent = "Rs. " + perKg.toFixed(2) + " /kg";
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeHsCodes();
+        loadHsCodes();
+        initializeSections(); // Initialize collapsed sections
+        calculate();
+        
+        // Auto-calculate on any change
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('change', calculate);
+            element.addEventListener('input', calculate);
+        });
+    });
+// Add database save button
+const saveSection = document.querySelector('.save-section');
+if (saveSection) {
+    const dbButton = document.createElement('button');
+    dbButton.className = 'btn-small';
+    dbButton.style.background = '#059669';
+    dbButton.innerHTML = '☁️ Save to Cloud';
+    dbButton.onclick = saveCalculationToDB;
+    saveSection.appendChild(dbButton);
+}
+
+// Save calculation to database
+async function saveCalculationToDB() {
+    const hsCode = document.getElementById('hs_code').value;
+    if (!hsCode) {
+        alert('Please select an HS Code first');
+        return;
+    }
+    
+    const calculationData = {
+        hsCode: hsCode,
+        hsDescription: document.getElementById('hs_code').selectedOptions[0].text,
+        
+        // Commercial & Valuation
+        origin: document.getElementById('origin').value,
+        incoterm: document.getElementById('incoterm').value,
+        unit_price: parseFloat(document.getElementById('unit_price').value),
+        freight_usd: parseFloat(document.getElementById('freight_usd').value),
+        insurance_usd: parseFloat(document.getElementById('insurance_usd').value),
+        itp_val: parseFloat(document.getElementById('itp_val').value),
+        ex_rate: parseFloat(document.getElementById('ex_rate').value),
+        qty: parseFloat(document.getElementById('qty').value),
+        
+        // Tax Rates
+        rate_cd: parseFloat(document.getElementById('rate_cd').value),
+        rate_acd: parseFloat(document.getElementById('rate_acd').value),
+        rate_rd: parseFloat(document.getElementById('rate_rd').value),
+        rate_add: parseFloat(document.getElementById('rate_add').value),
+        rate_st: parseFloat(document.getElementById('rate_st').value),
+        rate_ast: parseFloat(document.getElementById('rate_ast').value),
+        rate_it: parseFloat(document.getElementById('rate_it').value),
+        rate_cess: parseFloat(document.getElementById('rate_cess').value),
+        
+        // Local Charges
+        port_pkr: parseFloat(document.getElementById('port_pkr').value),
+        truck_pkr: parseFloat(document.getElementById('truck_pkr').value),
+        
+        // Calculated Results
+        final_cost_per_kg: document.getElementById('out_kg').textContent,
+        total_landed_cost: document.getElementById('finalCostValue').textContent,
+        
+        // Metadata
+        timestamp: new Date().toISOString(),
+        device: navigator.userAgent.substring(0, 100)
+    };
+    
+    try {
+        const response = await fetch('/api/data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(calculationData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const notice = document.getElementById('save-notice');
+            notice.style.display = 'block';
+            notice.textContent = `✅ Saved to cloud!`;
+            notice.style.background = '#d1fae5';
+            notice.style.color = '#065f46';
+            setTimeout(() => {
+                notice.style.display = 'none';
+            }, 3000);
+            return result;
+        } else {
+            throw new Error('Failed to save');
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('Failed to save to cloud. Check console for details.');
+    }
+}
+
+// Load all calculations from database
+async function loadAllCalculations() {
+    try {
+        const response = await fetch('/api/data');
+        const calculations = await response.json();
+        return calculations;
+    } catch (error) {
+        console.error('Load error:', error);
+        return [];
+    }
+}
+
+</script>
+</body>
+</html>
