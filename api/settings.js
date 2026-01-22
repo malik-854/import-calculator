@@ -27,6 +27,15 @@ module.exports = async (req, res) => {
     try {
         const db = await connectToDatabase();
         
+        // Ensure collections exist
+        const collections = await db.listCollections().toArray();
+        const collectionNames = collections.map(c => c.name);
+        
+        if (!collectionNames.includes('settings')) {
+            await db.createCollection('settings');
+            console.log('Created settings collection');
+        }
+        
         if (req.method === 'POST') {
             // Save settings
             const { deviceId, hsCode, settings } = req.body;
@@ -44,7 +53,7 @@ module.exports = async (req, res) => {
                 { upsert: true }
             );
             
-            return res.json({ success: true });
+            return res.json({ success: true, message: 'Saved to cloud' });
             
         } else if (req.method === 'GET') {
             // Load settings
@@ -64,6 +73,11 @@ module.exports = async (req, res) => {
         
     } catch (error) {
         console.error('API Error:', error);
-        return res.status(500).json({ error: error.message });
+        
+        // More detailed error response
+        return res.status(500).json({ 
+            error: 'Database connection failed',
+            details: error.message 
+        });
     }
 };
