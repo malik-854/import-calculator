@@ -1,18 +1,8 @@
 const { MongoClient } = require('mongodb');
 
 const MONGODB_URI = process.env.MONGODB_URI;
-let cachedDb = null;
 
-async function connectToDatabase() {
-    if (cachedDb) return cachedDb;
-    
-    const client = await MongoClient.connect(MONGODB_URI);
-    const db = client.db('import_calculator');
-    cachedDb = db;
-    return db;
-}
-
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,19 +15,17 @@ module.exports = async (req, res) => {
     }
     
     try {
-        const db = await connectToDatabase();
+        const client = await MongoClient.connect(MONGODB_URI);
+        const db = client.db('import_calculator');
         
         // Ensure collections exist
-        const collections = await db.listCollections().toArray();
-        const collectionNames = collections.map(c => c.name);
-        
-        if (!collectionNames.includes('settings')) {
+        try {
             await db.createCollection('settings');
-            console.log('Created settings collection');
+        } catch (e) {
+            // Collection already exists, ignore
         }
         
         if (req.method === 'POST') {
-            // Save settings
             const { deviceId, hsCode, settings } = req.body;
             
             await db.collection('settings').updateOne(
@@ -53,31 +41,32 @@ module.exports = async (req, res) => {
                 { upsert: true }
             );
             
-            return res.json({ success: true, message: 'Saved to cloud' });
+            await client.close();
+            return res.status(200).json({ success: true, message: 'Saved to cloud' });
             
         } else if (req.method === 'GET') {
-            // Load settings
             const { deviceId, hsCode } = req.query;
             
             const data = await db.collection('settings').findOne(
                 { deviceId, hsCode }
             );
             
-            return res.json({ 
+            await client.close();
+            return res.status(200).json({ 
                 success: true, 
                 settings: data ? data.settings : null 
             });
         }
         
+        await client.close();
         return res.status(405).json({ error: 'Method not allowed' });
         
     } catch (error) {
         console.error('API Error:', error);
-        
-        // More detailed error response
         return res.status(500).json({ 
-            error: 'Database connection failed',
-            details: error.message 
+            success: false,
+            error: 'Database error',
+            message: error.message 
         });
     }
-};
+}

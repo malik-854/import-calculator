@@ -2,10 +2,6 @@
   "name": "import-calculator",
   "version": "1.0.0",
   "description": "Pakistan Import Calculator with Cloud Sync",
-  "scripts": {
-    "dev": "echo 'Static site - no build required'"
-  },
-  "dependencies": {},
   "engines": {
     "node": "20.x"
   }
